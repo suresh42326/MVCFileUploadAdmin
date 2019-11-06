@@ -1,0 +1,122 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+<style>
+    .previewSection {
+        padding-top: 10px;
+    }
+
+        .previewSection .checkbox {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+        }
+
+    .imageSection {
+        display: inline-block;
+        padding: 10px;
+        border: 1px solid #eee;
+    }
+
+        .imageSection img {
+            width: 150px;
+            height: 150px;
+        }
+</style>
+<div class="container">
+    <form id="form1" method="post" enctype="multipart/form-data">
+        <div class="form">
+            <div class="row" id="fileSection">
+                <input type='file' id="fileUpload" multiple />
+            </div>
+            <div class="row" id="previewSection">
+
+            </div>
+            <div class="row">
+                <button type="button" onclick="submitForm();" class="btn btn-primary">Add Images</button>
+            </div>
+        </div>
+
+
+    </form>
+</div>
+<form runat="server">
+</form>
+
+@section scripts{
+    <script>
+        function validateCheckbox(checkbox) {
+            var $box = $(checkbox);
+            if ($box.is(":checked")) {
+                // the name of the box is retrieved using the .attr() method
+                // as it is assumed and expected to be immutable
+                var group = "input:checkbox[name='" + $box.attr("name") + "']";
+                // the checked state of the group/box on the other hand will change
+                // and the current value is retrieved using .prop() method
+                $(group).prop("checked", false);
+                $box.prop("checked", true);
+            } else {
+                $box.prop("checked", false);
+            }
+        }
+
+        function submitForm() {
+            let data = new FormData();
+            var files = $("#fileUpload").get(0).files;
+            for (let i = 0; i < files.length; i++) {
+                data.append("image" + i, files[i]);
+            }
+            debugger;
+            let primaryFileIndex = $('input[name ="checkbox"]:checked').attr('id').replace('checkbox', '');
+            data.append("PrimaryFileIndex", primaryFileIndex);
+
+            debugger;
+            $.ajax({
+                url: 'https://localhost:44344/api/images/postimages',
+                type: 'post',
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (data) {
+                    alert(data);
+                },
+                error: function (error) {
+                    console.log(error);
+                },
+
+            });
+        }
+
+        function readURL(input) {
+            //document.getElementById("fileUpload").value = null;
+            $("#previewSection").empty();
+            if (input.files && input.files[0]) {
+                for (let i = 0; i < input.files.length; i++) {
+                    let imageSection = ' <div class="imageSection"><div class="checkbox"><label><input name="checkbox" onchange="validateCheckbox(this);" type="checkbox" id="checkbox' + i + '">Primary Image</label></div><img id="image' + i + '"/>' + '</div>';
+                    $('#previewSection').prepend(imageSection);
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        $('#image' + i).attr('src', e.target.result);
+                    }
+
+                    reader.readAsDataURL(input.files[i]);
+                }
+            }
+
+            //if (input.files && input.files[0]) {
+            //    var reader = new FileReader();
+
+            //    reader.onload = function (e) {
+            //        $('#blah').attr('src', e.target.result);
+            //    }
+
+            //    reader.readAsDataURL(input.files[0]);
+            //}
+        }
+
+        $("#fileUpload").change(function () {
+            readURL(this);
+        });
+    </script>
+
+}
